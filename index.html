@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Salon Quest</title>
+<style>
+:root{
+  --cream:#FFF8F0;--orange:#FF7A2F;--ol:#FFB088;--od:#E05A10;
+  --green:#2ECC71;--gd:#27AE60;--red:#E74C3C;--gray:#888;--text:#333;
+  --shadow:0 4px 16px rgba(0,0,0,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--cream);font-family:'Helvetica Neue',Arial,sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;}
+#header{position:fixed;top:0;left:0;right:0;z-index:100;background:#fff;border-bottom:2px solid var(--ol);padding:8px 12px 6px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+#progress-bar{display:flex;align-items:center;gap:4px;justify-content:center;margin-bottom:4px;}
+.dot{width:28px;height:20px;border-radius:5px;background:#ddd;transition:background .3s;cursor:pointer;border:none;padding:0;}
+.dot:active{opacity:.7;transform:scale(.9);}.dot.active{background:var(--orange);}.dot.done{background:var(--ol);}
+#stage-label{text-align:center;font-size:11px;color:var(--gray);min-height:15px;}
+#header-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+.nav-btn{background:none;border:1.5px solid var(--ol);border-radius:20px;padding:4px 10px;font-size:11px;line-height:1.4;color:var(--od);cursor:pointer;min-width:56px;min-height:44px;text-align:center;}
+.nav-btn:active{background:var(--ol);}
+#lang-btn{font-size:18px;border:none;background:none;cursor:pointer;min-width:44px;min-height:44px;}
+#main{margin-top:92px;margin-bottom:88px;}
+.stage{display:none;min-height:calc(100vh - 180px);flex-direction:column;align-items:center;}
+.stage.active{display:flex;}
+#st0{background:linear-gradient(160deg,#FFF3E8,#FFE0C8);justify-content:center;padding:32px 20px;}
+#st0 h1{font-size:26px;font-weight:bold;text-align:center;color:var(--od);margin:8px 0 4px;}
+.hint-box{background:#fff;border-radius:12px;padding:10px 16px;margin:10px 0 24px;font-size:12px;color:var(--gray);text-align:center;line-height:1.7;border:1px solid var(--ol);}
+.hint-box strong{color:var(--od);font-size:13px;}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:340px;}
+.lang-card{background:#fff;border-radius:20px;padding:20px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);border:3px solid transparent;transition:all .15s;}
+.lang-card:active{transform:scale(.96);border-color:var(--orange);}
+.flag{font-size:44px;display:block;}.lname{font-size:17px;font-weight:bold;margin-top:6px;}.lname-ja{font-size:11px;color:var(--gray);margin-top:2px;}
+.stage-header{width:100%;text-align:center;padding:22px 20px 12px;background:linear-gradient(180deg,#fff,var(--cream));}
+.stage-icon{font-size:48px;display:block;margin-bottom:4px;}
+.stage-num{font-size:11px;color:var(--orange);font-weight:bold;letter-spacing:1px;}
+.stage-title{font-size:22px;font-weight:bold;margin:4px 0 2px;}
+.ja-sub{font-size:13px;font-weight:normal;color:var(--gray);display:block;margin-top:2px;}
+.stage-body{width:100%;padding:16px 20px 0;max-width:480px;}
+.q-card{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-bottom:14px;}
+.q-main{font-size:20px;font-weight:bold;line-height:1.4;margin-bottom:2px;}
+.q-kana{font-size:12px;color:var(--od);margin-bottom:2px;}
+.q-ja{font-size:12px;color:var(--gray);margin-bottom:14px;}
+.choice-grid{display:grid;gap:10px;}
+.col2{grid-template-columns:1fr 1fr;}.col1{grid-template-columns:1fr;}
+.cbtn{background:var(--cream);border:2.5px solid #ddd;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;}
+.cbtn:active{transform:scale(.97);}
+.cbtn.sel{background:#FFF0E6;border-color:var(--orange);}
+.cbtn.sel::after{content:'✓';position:absolute;top:5px;right:9px;color:var(--orange);font-weight:bold;font-size:15px;}
+.cbtn.ng-s{background:#FFF5F5;border-color:#FFCCCC;}
+.cbtn.ng-s.sel{background:#FFE0E0;border-color:var(--red);}
+.cbtn.ng-s.sel::after{color:var(--red);}
+.cbtn.ng-s.sel .cl{color:var(--red);}
+.ce{font-size:26px;}.cl{font-size:14px;font-weight:bold;color:var(--text);line-height:1.3;}
+.ck{font-size:10px;color:var(--od);line-height:1.4;}.cj{font-size:10px;color:var(--gray);line-height:1.4;}
+.cbtn.sel .cl{color:var(--od);}
+.len-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;}
+.len-btn{background:#fff;border:2.5px solid #ddd;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:bold;cursor:pointer;text-align:center;min-width:70px;transition:all .15s;line-height:1.4;}
+.len-btn.sel{background:#FFF0E6;border-color:var(--orange);color:var(--od);}
+.len-btn:active{transform:scale(.96);}
+.price-disp{font-size:52px;font-weight:bold;color:var(--od);text-align:center;padding:8px 0;}
+.time-disp{font-size:38px;font-weight:bold;text-align:center;padding:4px 0;}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
+.nk{background:#fff;border:2px solid #ddd;border-radius:14px;padding:14px;font-size:22px;font-weight:bold;cursor:pointer;text-align:center;transition:all .15s;}
+.nk:active{background:var(--ol);}
+.nk.del{background:#FFF5F5;border-color:#FFCCCC;font-size:18px;}
+.nk.clr{background:#F5F5F5;font-size:16px;}
+.time-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.sum-card{background:#fff;border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
+.sum-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0f0f0;}
+.sum-row:last-child{border-bottom:none;}
+.sum-ico{font-size:20px;width:28px;text-align:center;}
+.sum-key{font-size:11px;color:var(--gray);min-width:76px;line-height:1.4;}
+.sum-val{font-size:14px;font-weight:bold;flex:1;}
+.sum-price{font-size:40px;font-weight:bold;color:var(--od);text-align:center;padding:6px 0;}
+.sum-time{font-size:26px;font-weight:bold;text-align:center;}
+.agree-btn{display:block;width:100%;background:var(--green);color:#fff;font-size:20px;font-weight:bold;padding:18px;border:none;border-radius:16px;cursor:pointer;box-shadow:0 4px 12px rgba(46,204,113,.35);transition:all .15s;text-align:center;margin-top:6px;}
+.agree-btn:active{transform:scale(.98);background:var(--gd);}
+.next-btn{display:block;width:calc(100% - 40px);max-width:440px;margin:16px auto 0;background:var(--orange);color:#fff;font-size:18px;font-weight:bold;line-height:1.5;padding:16px;border:none;border-radius:16px;cursor:pointer;box-shadow:0 4px 12px rgba(255,122,47,.35);transition:all .15s;text-align:center;}
+.next-btn:active{transform:scale(.98);background:var(--od);}
+.btn-sub{font-size:11px;font-weight:normal;opacity:.85;display:block;}
+.ss-bar{display:flex;gap:6px;justify-content:center;margin-bottom:14px;}
+.ss{width:8px;height:8px;border-radius:50%;background:#ddd;transition:background .3s;}
+.ss.active{background:var(--orange);width:20px;border-radius:4px;}
+.ss.done{background:var(--ol);}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cat-item{background:#f5f5f5;border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;border:3px solid transparent;transition:all .15s;position:relative;flex-direction:column;gap:2px;}
+.cat-item.sel{border-color:var(--orange);background:#FFF0E6;}
+.cat-item:active{transform:scale(.95);}
+.cat-chk{display:none;position:absolute;top:3px;right:5px;font-size:14px;}
+.cat-item.sel .cat-chk{display:block;}
+.ph-card{background:#fff;border-radius:16px;padding:22px;text-align:center;box-shadow:var(--shadow);color:var(--gray);font-size:14px;line-height:1.8;margin-bottom:14px;}
+.ph-card strong{color:var(--orange);font-size:16px;display:block;margin-bottom:8px;}
+#sos-fab{position:fixed;bottom:24px;right:20px;z-index:200;width:68px;height:68px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(231,76,60,.4);display:none;align-items:center;justify-content:center;flex-direction:column;line-height:1.3;}
+#sos-fab:active{transform:scale(.93);}
+.fab-e{font-size:26px;}.fab-l{font-size:10px;font-weight:bold;}
+#sos-ov{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);align-items:flex-end;}
+#sos-ov.open{display:flex;}
+#sos-panel{background:#fff;width:100%;border-radius:24px 24px 0 0;padding:20px 16px 36px;box-shadow:0 -4px 20px rgba(0,0,0,.15);}
+#sos-panel h3{font-size:16px;font-weight:bold;color:var(--red);text-align:center;margin-bottom:14px;}
+.sos-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sos-item{background:#FFF0F0;border:2px solid #FFCCCC;border-radius:14px;padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s;}
+.sos-item:active{background:#FFCCCC;}
+.sos-e{font-size:28px;display:block;}.sos-c{font-size:12px;font-weight:bold;color:#c0392b;margin-top:3px;}
+.sos-k{font-size:10px;color:var(--od);margin-top:1px;}
+.sos-j{font-size:10px;color:var(--gray);border-top:1px solid #FFCCCC;padding-top:2px;margin-top:2px;}
+#sos-close{display:block;margin:14px auto 0;background:var(--gray);color:#fff;border:none;border-radius:12px;padding:12px 32px;font-size:15px;cursor:pointer;}
+#sos-alert{display:none;position:fixed;inset:0;z-index:400;background:rgba(231,76,60,.93);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:36px;}
+#sos-alert.open{display:flex;}
+.al-e{font-size:80px;}.al-j{font-size:26px;font-weight:bold;color:#fff;margin:14px 0 6px;line-height:1.5;}
+.al-en{font-size:15px;color:rgba(255,255,255,.8);}
+#sos-ok{margin-top:28px;background:#fff;color:var(--red);border:none;border-radius:14px;padding:16px 36px;font-size:17px;font-weight:bold;cursor:pointer;}
+#sc{display:none;position:fixed;inset:0;z-index:500;background:rgba(255,190,80,.92);align-items:center;justify-content:center;flex-direction:column;text-align:center;pointer-events:none;}
+#sc.open{display:flex;}
+.sc-e{font-size:64px;animation:bounce .4s ease;}
+.sc-t{font-size:30px;font-weight:bold;color:#fff;margin-top:10px;text-shadow:0 2px 8px rgba(0,0,0,.2);}
+.sc-s{font-size:14px;color:rgba(255,255,255,.9);margin-top:6px;}
+@keyframes bounce{0%{transform:scale(.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+#lang-ov{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.4);align-items:center;justify-content:center;}
+#lang-ov.open{display:flex;}
+#lang-modal{background:#fff;border-radius:20px;padding:22px 18px;width:calc(100% - 40px);max-width:340px;box-shadow:var(--shadow);}
+#lang-modal h3{text-align:center;font-size:16px;margin-bottom:4px;}
+.modal-hint{font-size:11px;color:var(--gray);text-align:center;margin-bottom:14px;}
+.lang-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.lmb{background:var(--cream);border:2px solid var(--ol);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;font-size:14px;font-weight:bold;transition:all .15s;}
+.lmb:active,.lmb.sel{background:var(--orange);color:#fff;border-color:var(--orange);}
+#lm-close{display:block;margin:12px auto 0;background:none;border:1.5px solid var(--gray);border-radius:12px;padding:10px 24px;font-size:13px;color:var(--gray);cursor:pointer;}
+
+/* Stage3/4 */
+.meter-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;}
+.meter-btn{width:56px;height:56px;border-radius:50%;border:2.5px solid #ddd;background:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.meter-btn:active{transform:scale(.93);background:var(--ol);}
+.meter-track{flex:1;height:14px;border-radius:7px;background:#eee;overflow:hidden;max-width:180px;}
+.meter-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#4FC3F7,#FF7A2F);transition:width .2s;}
+.meter-val{font-size:20px;font-weight:bold;color:var(--od);min-width:28px;text-align:center;}
+#head-canvas{display:block;margin:12px auto;cursor:crosshair;border-radius:50%;box-shadow:var(--shadow);}
+.timer-ring-wrap{position:relative;width:160px;height:160px;margin:0 auto;}
+.timer-ring-wrap svg{transform:rotate(-90deg);}
+.timer-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.timer-min{font-size:36px;font-weight:bold;color:var(--od);}
+.timer-lbl{font-size:11px;color:var(--gray);}
+.timer-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+.timer-ctrl{background:#fff;border:2px solid var(--ol);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:bold;cursor:pointer;color:var(--od);transition:all .15s;}
+.timer-ctrl:active{background:var(--ol);}
+.timer-ctrl.running{background:var(--red);color:#fff;border-color:var(--red);}
+.save-card{background:#fff;border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:12px;}
+.save-title{font-size:16px;font-weight:bold;color:var(--text);margin-bottom:12px;text-align:center;}
+.save-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* Stage5/6 */
+.care-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.care-ico{font-size:28px;flex-shrink:0;}
+.care-txt{font-size:14px;line-height:1.5;}
+.care-ja{font-size:11px;color:var(--gray);}
+.notip-box{background:linear-gradient(135deg,#fff8e0,#fff3cc);border:2px solid #f0c040;border-radius:16px;padding:18px;text-align:center;margin-bottom:14px;}
+.notip-main{font-size:18px;font-weight:bold;color:#8a6000;line-height:1.5;}
+.notip-ja{font-size:12px;color:#a07000;margin-top:4px;}
+.payment-big{font-size:58px;font-weight:bold;color:var(--od);text-align:center;padding:10px 0 4px;}
+.pay-icons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;}
+.pay-icon{background:#f5f5f5;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:bold;color:#444;}
+.qr-box{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:var(--shadow);margin-bottom:14px;}
+.qr-label{font-size:14px;color:var(--gray);margin-bottom:10px;}
+.qr-code{width:120px;height:120px;background:#f0f0f0;border-radius:10px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;}
+.complete-wrap{text-align:center;padding:48px 24px;}
+.complete-emoji{font-size:80px;animation:bounce .5s ease;}
+.complete-title{font-size:32px;font-weight:bold;color:var(--orange);margin:16px 0 8px;}
+.complete-sub{font-size:16px;color:#666;line-height:2;}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="progress-bar">
+    <div class="dot" id="d0" onclick="dotTap(0)"></div>
+    <div class="dot" id="d1" onclick="dotTap(1)"></div>
+    <div class="dot" id="d2" onclick="dotTap(2)"></div>
+    <div class="dot" id="d3" onclick="dotTap(3)"></div>
+    <div class="dot" id="d4" onclick="dotTap(4)"></div>
+    <div class="dot" id="d5" onclick="dotTap(5)"></div>
+    <div class="dot" id="d6" onclick="dotTap(6)"></div>
+  </div>
+  <div id="stage-label">Salon Quest</div>
+  <div id="header-nav">
+    <button class="nav-btn" id="back-btn" onclick="goBack()">← Back<br><span style="font-size:10px;color:var(--gray)">戻る</span></button>
+    <span style="font-size:18px;font-weight:bold;color:var(--orange)">✂️ Salon Quest</span>
+    <button id="lang-btn" onclick="openLang()">🌐</button>
+  </div>
+</div>
+
+<div id="main">
+<section class="stage active" id="st0">
+  <div style="font-size:52px;text-align:center;margin-top:8px;">✂️</div>
+  <h1>Salon Quest</h1>
+  <div class="lang-grid">
+    <div class="lang-card" onclick="selectLang('ja')"><span class="flag">🇯🇵</span><span class="lname">日本語</span><span class="lname-ja"></span></div>
+    <div class="lang-card" onclick="selectLang('en')"><span class="flag">🇺🇸</span><span class="lname">English</span><span class="lname-ja">英語</span></div>
+    <div class="lang-card" onclick="selectLang('zh')"><span class="flag">🇨🇳</span><span class="lname">中文</span><span class="lname-ja">中国語</span></div>
+    <div class="lang-card" onclick="selectLang('ko')"><span class="flag">🇰🇷</span><span class="lname">한국어</span><span class="lname-ja">韓国語</span></div>
+  </div>
+</section>
+<section class="stage" id="st1">
+  <div class="stage-header"><span class="stage-icon">🏷️</span><span class="stage-num">STAGE 1 / 6</span><div class="stage-title" id="st1-title"></div></div>
+  <div class="stage-body" id="st1-body"></div>
+</section>
+<section class="stage" id="st2">
+  <div class="stage-header"><span class="stage-icon">📋</span><span class="stage-num">STAGE 2 / 6</span><div class="stage-title" id="st2-title"></div><div class="ss-bar" id="ss-bar"></div></div>
+  <div class="stage-body" id="st2-body"></div>
+</section>
+<section class="stage" id="st3">
+  <div class="stage-header"><span class="stage-icon">💧</span><span class="stage-num">STAGE 3 / 6</span><div class="stage-title" id="st3-title"></div></div>
+  <div class="stage-body" id="st3-body"></div>
+</section>
+<section class="stage" id="st4">
+  <div class="stage-header"><span class="stage-icon">✨</span><span class="stage-num">STAGE 4 / 6</span><div class="stage-title" id="st4-title"></div></div>
+  <div class="stage-body" id="st4-body"></div>
+</section>
+<section class="stage" id="st5">
+  <div class="stage-header"><span class="stage-icon">🪞</span><span class="stage-num">STAGE 5 / 6</span><div class="stage-title" id="st5-title"></div></div>
+  <div class="stage-body" id="st5-body"></div>
+</section>
+<section class="stage" id="st6">
+  <div class="stage-header"><span class="stage-icon">🏆</span><span class="stage-num">STAGE 6 / 6</span><div class="stage-title" id="st6-title"></div></div>
+  <div class="stage-body" id="st6-body"></div>
+</section>
+</div>
+
+<button id="sos-fab" onclick="openSOS()"><span class="fab-e">🆘</span><span class="fab-l">SOS/ヘルプ</span></button>
+<div id="sos-ov" onclick="closeSOS()">
+  <div id="sos-panel" onclick="event.stopPropagation()">
+    <h3>🆘 SOS / ヘルプ</h3>
+    <div class="sos-grid" id="sos-grid"></div>
+    <button id="sos-close" onclick="closeSOS()">Close / 閉じる</button>
+  </div>
+</div>
+<div id="sos-alert" onclick="closeAlert()">
+  <span class="al-e" id="al-e"></span><div class="al-j" id="al-j"></div><div class="al-en" id="al-en"></div>
+  <button id="sos-ok">✅ 確認しました<span style="font-size:12px;color:var(--gray);display:block;">OK / I understand</span></button>
+</div>
+<div id="sc">
+  <span class="sc-e">✨</span><div class="sc-t">Stage Clear! ✨</div><div class="sc-s" id="sc-sub"></div>
+</div>
+<div id="lang-ov" onclick="closeLang()">
+  <div id="lang-modal" onclick="event.stopPropagation()">
+    <h3>🌐 言語 / Language</h3>
+    <p class="modal-hint">変更しても回答内容は保持されます</p>
+    <div class="lang-mini">
+      <div class="lmb" id="lb-ja" onclick="changeLang('ja')">🇯🇵 日本語</div>
+      <div class="lmb" id="lb-en" onclick="changeLang('en')">🇺🇸 English<br><span style="font-size:10px;font-weight:normal">英語</span></div>
+      <div class="lmb" id="lb-zh" onclick="changeLang('zh')">🇨🇳 中文<br><span style="font-size:10px;font-weight:normal">中国語</span></div>
+      <div class="lmb" id="lb-ko" onclick="changeLang('ko')">🇰🇷 한국어<br><span style="font-size:10px;font-weight:normal">韓国語</span></div>
+    </div>
+    <button id="lm-close" onclick="closeLang()">閉じる / Close</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+============================================================ */
+var S = {
+  lang: 'en',
+  stage: 0,
+  sub: 0,
+  st1step: 0,
+  visit: { res: null, menu: [], bag: null },
+  counsel: { hist: [], allergy: null, styleId: null, ng: [], len: null, min: null, price: null, agreed: false, at: null },
+  shampoo: { cover: null, temp: 3, pressure: 3, itchy: [] },
+  treat: { talk: null, drink: null, timerEnd: null, timerTotal: null, checks: {} },
+  finish: { looks: null, retouch: [], styling: null, photo: null },
+  sos: []
+};
+
+/* ============================================================
+   i18n
+============================================================ */
+var D = {
+  s1_title:  { ja:'受付',         en:'Check In',    zh:'前台登记',   ko:'체크인',       kana:{ en:'チェック イン',      zh:'チエンタイ ドンジー',    ko:'チェクイン' }},
+  s2_title:  { ja:'カウンセリング', en:'Counseling',  zh:'发型咨询',   ko:'상담',         kana:{ en:'カウンセリング',     zh:'ファーシン ズーシュン',  ko:'サンダム' }},
+  s3_title:  { ja:'シャンプー',    en:'Shampoo',     zh:'洗发',       ko:'샴푸',         kana:{ en:'シャンプー',         zh:'シーファー',            ko:'シャムプ' }},
+  s4_title:  { ja:'施術中',        en:'Treatment',   zh:'施术中',     ko:'시술 중',      kana:{ en:'トリートメント',     zh:'シースーチョン',        ko:'シスルチュン' }},
+  s5_title:  { ja:'仕上げ確認',    en:'Finish Check',zh:'完成确认',   ko:'마무리 확인',  kana:{ en:'フィニッシュ チェック', zh:'ワンチョン チュエレン', ko:'マムリ ファギン' }},
+  s6_title:  { ja:'お会計',        en:'Payment',     zh:'结账',       ko:'계산',         kana:{ en:'ペイメント',         zh:'ジエジャン',            ko:'ケサン' }},
+  q_res:     { ja:'ご予約はありますか？', en:'Do you have a reservation?', zh:'请问有预约吗？', ko:'예약하셨나요?', kana:{ en:'ドゥ ユー ハブ ア レザベーション？', zh:'チンウェン ヨウ ユーユェ マ？', ko:'イェヤク ハショッスムニカ？' }},
+  yes_res:   { ja:'予約あり',      en:'I have a reservation', zh:'有预约',  ko:'예약 있어요',  kana:{ en:'アイ ハブ ア レザベーション', zh:'ヨウ ユーユェ', ko:'イェヤク イッソヨ' }},
+  no_res:    { ja:'予約なし',      en:'Walk-in',     zh:'没有预约',   ko:'예약 없어요',  kana:{ en:'ウォークイン', zh:'メイヨウ ユーユェ', ko:'イェヤク オプソヨ' }},
+  q_menu:    { ja:'今日のメニューは？', en:'What would you like today?', zh:'今天想做什么？', ko:'오늘 원하시는 메뉴는?', kana:{ en:'ワット ウッド ユー ライク トゥデイ？', zh:'ジンティエン シャン ズオ シェンマ？', ko:'オヌル ウォナシヌン メニュヌン？' }},
+  m_cut:     { ja:'カット',        en:'Cut',         zh:'剪发',       ko:'커트',         kana:{ en:'カット',     zh:'ジェン ファ', ko:'コトゥ' }},
+  m_color:   { ja:'カラー',        en:'Color',       zh:'染发',       ko:'컬러',         kana:{ en:'カラー',     zh:'ラン ファ',   ko:'コルロ' }},
+  m_shampoo: { ja:'シャンプーのみ', en:'Shampoo only',zh:'仅洗发',    ko:'샴푸만',       kana:{ en:'シャンプー オンリー', zh:'ジン シーファー', ko:'シャムプマン' }},
+  m_both:    { ja:'カット＋カラー', en:'Cut + Color', zh:'剪发＋染发', ko:'커트＋컬러',   kana:{ en:'カット プラス カラー', zh:'ジェンファ プラス ランファ', ko:'コトゥ プラス コルロ' }},
+  m_perm:    { ja:'パーマ',        en:'Perm',        zh:'烫发',       ko:'파마',         kana:{ en:'パーム', zh:'タン ファ', ko:'パマ' }},
+  multi_ok:  { ja:'複数選べます',   en:'Multiple OK', zh:'可多选',     ko:'복수 선택 가능' },
+  q_bag:     { ja:'お荷物をお預かりします', en:"We'll keep your belongings safe", zh:'我们帮您保管行李', ko:'짐을 맡아드리겠습니다', kana:{ en:'ウィル キープ ユア ビロンギングス セーフ', zh:'ウォーメン バン ニー バオグァン シンリー', ko:'ジムル マタドゥリゲッスムニダ' }},
+  bag_yes:   { ja:'お願いします',   en:'Yes, please', zh:'好的，谢谢', ko:'부탁해요',     kana:{ en:'イエス プリーズ', zh:'ハオダ シエシエ', ko:'プタッケヨ' }},
+  bag_no:    { ja:'自分で持ちます', en:"I'll keep it",zh:'我自己拿',   ko:'제가 가지고 있을게요', kana:{ en:'アイル キープ イット', zh:'ウォ ズージー ナー', ko:'チェガ カジゴ イスルゲヨ' }},
+  q_hist:    { ja:'過去2年以内の施術は？（複数可）', en:'Hair treatments in last 2 years?', zh:'近2年内做过哪些护理？', ko:'최근 2년 내 시술 경험은?', kana:{ en:'ヘア トリートメンツ イン ラスト ツー イヤーズ？', zh:'ジン リャンニエン ネイ ズオグォ ナーシェ フーリー？', ko:'チェグン イニョン ネ シスル キョンホムン？' }},
+  h_color:   { ja:'カラー',   en:'Color',         zh:'染发',     ko:'컬러',  kana:{ en:'カラー',         zh:'ランファ',  ko:'コルロ' }},
+  h_bleach:  { ja:'ブリーチ', en:'Bleach',        zh:'漂白',     ko:'블리치', kana:{ en:'ブリーチ',       zh:'ピャオバイ',ko:'ブルリチ' }},
+  h_perm:    { ja:'パーマ',   en:'Perm',          zh:'烫发',     ko:'파마',  kana:{ en:'パーム',         zh:'タンファ',  ko:'パマ' }},
+  h_str:     { ja:'縮毛矯正', en:'Straightening', zh:'缩毛矫正', ko:'매직',  kana:{ en:'ストレートニング', zh:'スオマオ ジャオジョン', ko:'メジク' }},
+  h_none:    { ja:'なし',     en:'None',          zh:'没有',     ko:'없음',  kana:{ en:'ナン', zh:'メイヨウ', ko:'オプム' }},
+  q_allergy: { ja:'アレルギー・頭皮の状態は？', en:'Any allergies or scalp concerns?', zh:'过敏或头皮问题？', ko:'알레르기나 두피 상태는?', kana:{ en:'エニー アレジーズ オア スキャルプ コンサーンズ？', zh:'グオミン フオ トウピー ウェンティー？', ko:'アルレルギナ トゥピ サンテヌン？' }},
+  a_none:    { ja:'特になし',         en:'None',               zh:'没有问题',   ko:'없음',            kana:{ en:'ナン',                   zh:'メイヨウ ウェンティー', ko:'オプム' }},
+  a_sens:    { ja:'敏感肌',           en:'Sensitive skin',     zh:'敏感肌肤',   ko:'민감성 피부',     kana:{ en:'センシティブ スキン',     zh:'ミンガン ジーフー',     ko:'ミンガムソン ピブ' }},
+  a_react:   { ja:'かぶれた経験あり', en:'Had a reaction before', zh:'有过敏经历', ko:'알레르기 경험 있음', kana:{ en:'ハッド ア リアクション ビフォア', zh:'ヨウ グオミン ジンリー', ko:'アルレルギ キョンホム イッスム' }},
+  q_style:   { ja:'なりたいスタイルを選んでください', en:'Choose your desired style', zh:'请选择您想要的发型', ko:'원하시는 스타일을 선택해주세요', kana:{ en:'チューズ ユア ディザイアド スタイル', zh:'チン シュアンツェ ニン シャンヤオ デ ファーシン', ko:'ウォナシヌン スタイルル ソンテッケジュセヨ' }},
+  photo_hint:{ ja:'📷 スマホの写真を見せてもらえます', en:'📷 You can show us a photo on your phone', zh:'📷 也可以用手机展示参考图', ko:'📷 스마트폰으로 사진을 보여주셔도 됩니다' },
+  q_ng:      { ja:'してほしくないことは？（複数可）', en:'Anything to avoid?', zh:'有什么不想做的？', ko:'원하지 않는 것은?', kana:{ en:'エニシング トゥ アボイド？', zh:'ヨウ シェンマ ブーシャン ズオ デ？', ko:'ウォナジ アンヌン ゴスン？' }},
+  ng_short:  { ja:'短くしすぎないで', en:'Not too short',    zh:'不要剪太短', ko:'너무 짧게 하지 말아요', kana:{ en:'ノット トゥー ショート',    zh:'ブーヤオ ジェン タイドワン', ko:'ノム ッチャルゲ ハジ マラヨ' }},
+  ng_bang:   { ja:'前髪は切らないで', en:'Keep my bangs',    zh:'不要剪刘海', ko:'앞머리는 자르지 마세요', kana:{ en:'キープ マイ バングス',     zh:'ブーヤオ ジェン リウハイ',   ko:'アンモリヌン チャルジ マセヨ' }},
+  ng_bright: { ja:'明るくしないで',   en:'No brighter',      zh:'不要更亮',   ko:'밝게 하지 마세요',      kana:{ en:'ノー ブライター',         zh:'ブーヤオ ゴン リャン',       ko:'バルゲ ハジ マセヨ' }},
+  ng_ear:    { ja:'耳を出さないで',   en:'Keep ears covered',zh:'不要露耳朵', ko:'귀를 드러내지 마세요',  kana:{ en:'キープ イアーズ カバード', zh:'ブーヤオ ルー アルドゥオ',   ko:'クィルル ドゥロネジ マセヨ' }},
+  q_len:     { ja:'どこまで切りますか？', en:'How short would you like it?', zh:'剪到哪里？', ko:'어디까지 자를까요?', kana:{ en:'ハウ ショート ウッド ユー ライク イット？', zh:'ジェンダオ ナーリー？', ko:'オディッカジ チャルルッカヨ？' }},
+  l_above:   { ja:'肩より上', en:'Above shoulder', zh:'肩膀以上', ko:'어깨 위', kana:{ en:'アバブ ショルダー',  zh:'ジェンバン イーシャン', ko:'オッケ ウィ' }},
+  l_sho:     { ja:'肩',       en:'Shoulder',        zh:'肩膀',     ko:'어깨',   kana:{ en:'ショルダー',        zh:'ジェンバン',            ko:'オッケ' }},
+  l_col:     { ja:'鎖骨',     en:'Collarbone',      zh:'锁骨',     ko:'쇄골',   kana:{ en:'カラーボーン',      zh:'スオグー',              ko:'ソェゴル' }},
+  l_chest:   { ja:'胸より上', en:'Chest length',    zh:'胸部以上', ko:'가슴 위',kana:{ en:'チェスト レングス', zh:'シォンブー イーシャン',  ko:'カスム ウィ' }},
+  q_price:   { ja:'料金・所要時間（美容師が入力）', en:'Price & Time (Stylist enters)', zh:'费用与时间（发型师输入）', ko:'요금 및 시간（스타일리스트 입력）', kana:{ en:'プライス アンド タイム', zh:'フェイヨン ユー シージエン', ko:'ヨグム ミッ シガン' }},
+  tax_label: { ja:'税込', en:'Tax included', zh:'含税', ko:'세금 포함', kana:{ en:'タックス インクルーディド', zh:'ハンシュイ', ko:'セグム ポハム' }},
+  tax_excl:  { ja:'税抜', en:'Before tax', zh:'不含税', ko:'세전', kana:{ en:'ビフォア タックス', zh:'ブーハンシュイ', ko:'セジョン' }},
+  q_agree:   { ja:'内容の確認', en:'Please confirm', zh:'请确认内容', ko:'내용을 확인해주세요', kana:{ en:'プリーズ コンファーム', zh:'チン チュエレン ネーロン', ko:'ネヨンル ファギネジュセヨ' }},
+  agree_ok:  { ja:'🤝 OK！スタート', en:"🤝 OK! Let's Start", zh:'🤝 好的！开始吧', ko:'🤝 OK! 시작해요', kana:{ en:'オーケー レッツ スタート', zh:'ハオダ カイシー バ', ko:'オーケー シジャッケヨ' }},
+  min_unit:  { ja:'分', en:'min', zh:'分钟', ko:'분' },
+  next:      { ja:'次へ →', en:'Next →', zh:'下一步 →', ko:'다음 →', kana:{ en:'ネクスト', zh:'シャ イーブー', ko:'ダウム' }},
+
+  q_cover:   { ja:'顔にタオルをかけますか？', en:'Would you like a face towel?', zh:'需要盖脸巾吗？', ko:'얼굴에 타올을 덮을까요?', kana:{ en:'ウッド ユー ライク ア フェイス タオル？', zh:'シュヤオ ガイ リェンジン マ？', ko:'オルグレ タオルル トップルッカヨ？' }},
+  cover_yes: { ja:'かけてください', en:'Yes please', zh:'请盖上', ko:'덮어주세요', kana:{ en:'イエス プリーズ', zh:'チン ガイシャン', ko:'トポジュセヨ' }},
+  cover_no:  { ja:'いりません', en:'No thanks', zh:'不用了', ko:'괜찮아요', kana:{ en:'ノー サンクス', zh:'ブーヨンラ', ko:'クェンチャナヨ' }},
+  q_temp:    { ja:'お湯の温度はいかがですか？', en:'How is the water temperature?', zh:'水温合适吗？', ko:'물 온도는 어떤가요?', kana:{ en:'ハウ イズ ザ ウォーター テンパラチャー？', zh:'シュイウェン ハーシー マ？', ko:'ムル オンドヌン オットンガヨ？' }},
+  temp_cold: { ja:'もっと熱く', en:'Hotter please', zh:'请热一点', ko:'더 뜨겁게', kana:{ en:'ホッター プリーズ', zh:'チン ルー イーディエン', ko:'ト ットゥゴッケ' }},
+  temp_ok:   { ja:'ちょうどいい', en:'Perfect', zh:'正好', ko:'딱 좋아요', kana:{ en:'パーフェクト', zh:'ジェンハオ', ko:'ッタク チョアヨ' }},
+  temp_hot:  { ja:'もっとぬるく', en:'Cooler please', zh:'请凉一点', ko:'더 시원하게', kana:{ en:'クーラー プリーズ', zh:'チン リャン イーディエン', ko:'ト シウォナゲ' }},
+  q_pressure:{ ja:'力加減はいかがですか？', en:'How is the pressure?', zh:'力度合适吗？', ko:'압력은 어떤가요?', kana:{ en:'ハウ イズ ザ プレッシャー？', zh:'リードゥ ハーシー マ？', ko:'アムニョグン オットンガヨ？' }},
+  pres_weak: { ja:'もっと強く', en:'Stronger please', zh:'请用力点', ko:'더 세게', kana:{ en:'ストロンガー プリーズ', zh:'チン ヨンリー ディエン', ko:'ト セゲ' }},
+  pres_ok:   { ja:'ちょうどいい', en:'Perfect', zh:'正好', ko:'딱 좋아요', kana:{ en:'パーフェクト', zh:'ジェンハオ', ko:'ッタク チョアヨ' }},
+  pres_hard: { ja:'もっと弱く', en:'Gentler please', zh:'请轻一点', ko:'더 약하게', kana:{ en:'ジェントラー プリーズ', zh:'チン チン イーディエン', ko:'ト ヤッカゲ' }},
+  q_itchy:   { ja:'かゆいところを指でタップしてください', en:'Tap where it feels itchy', zh:'请点击感觉痒的地方', ko:'가려운 곳을 탭해주세요', kana:{ en:'タップ ウェア イット フィールズ イッチー', zh:'チン ディエンジー ガンジュエ ヤン デ ディーファン', ko:'カリョウン ゴスル テッヘジュセヨ' }},
+  itchy_clear:{ ja:'リセット', en:'Clear', zh:'清除', ko:'지우기' },
+
+  q_talk:    { ja:'施術中はどうしますか？', en:'During the treatment...', zh:'施术过程中...', ko:'시술 중에는...', kana:{ en:'デュリング ザ トリートメント', zh:'シースー グォチョンチョン', ko:'シスル チュンエヌン' }},
+  talk_chat: { ja:'おしゃべりしたい', en:"Let's chat!", zh:'想聊天', ko:'대화하고 싶어요', kana:{ en:'レッツ チャット', zh:'シャン リャオティエン', ko:'テファハゴ シッポヨ' }},
+  talk_quiet:{ ja:'静かに過ごしたい', en:'Quiet please', zh:'请保持安静', ko:'조용히 있을게요', kana:{ en:'クワイエット プリーズ', zh:'チン バオチー アンジン', ko:'チョヨンヒ イスルゲヨ' }},
+  talk_sleep:{ ja:'寝てもいいですか？', en:'Can I sleep?', zh:'可以睡觉吗？', ko:'자도 될까요?', kana:{ en:'キャン アイ スリープ？', zh:'クーイー シュイジャオ マ？', ko:'チャド ドェルッカヨ？' }},
+  q_drink:   { ja:'お飲み物はいかがですか？', en:'Would you like a drink?', zh:'您想喝什么？', ko:'음료는 어떠세요?', kana:{ en:'ウッド ユー ライク ア ドリンク？', zh:'ニン シャン ハー シェンマ？', ko:'ウムリョヌン オットセヨ？' }},
+  dk_coffee: { ja:'コーヒー', en:'Coffee', zh:'咖啡', ko:'커피', kana:{ en:'コーヒー', zh:'カーフェイ', ko:'コピ' }},
+  dk_tea:    { ja:'お茶', en:'Tea', zh:'茶', ko:'차', kana:{ en:'ティー', zh:'チャー', ko:'チャ' }},
+  dk_water:  { ja:'お水', en:'Water', zh:'水', ko:'물', kana:{ en:'ウォーター', zh:'シュイ', ko:'ムル' }},
+  dk_none:   { ja:'いらない', en:'No thanks', zh:'不用了', ko:'괜찮아요', kana:{ en:'ノー サンクス', zh:'ブーヨンラ', ko:'クェンチャナヨ' }},
+  timer_label:{ ja:'施術タイマー', en:'Treatment Timer', zh:'施术计时', ko:'시술 타이머', kana:{ en:'トリートメント タイマー', zh:'シースー ジーシー', ko:'シスル タイモ' }},
+  timer_set:  { ja:'タイマーをセット（美容師）', en:'Set Timer (Stylist)', zh:'设置计时（发型师）', ko:'타이머 설정（스타일리스트）', kana:{ en:'セット タイマー', zh:'シェジー ジーシー', ko:'タイモ ソルジョン' }},
+  chk_bangs:  { ja:'前髪の長さ', en:'Bangs length', zh:'刘海长度', ko:'앞머리 길이', kana:{ en:'バングス レングス', zh:'リウハイ チャンドゥ', ko:'アンモリ キルイ' }},
+  chk_side:   { ja:'サイドの長さ', en:'Side length', zh:'两侧长度', ko:'사이드 길이', kana:{ en:'サイド レングス', zh:'リャンツェ チャンドゥ', ko:'サイドゥ キルイ' }},
+  chk_more:   { ja:'もう少し切る', en:'Cut a bit more', zh:'再剪一点', ko:'조금 더 자를게요', kana:{ en:'カット ア ビット モア', zh:'ザイ ジェン イーディエン', ko:'チョグム ト チャルルゲヨ' }},
+  chk_ok:     { ja:'これでOK', en:'This is perfect', zh:'这样很好', ko:'이대로 좋아요', kana:{ en:'ディス イズ パーフェクト', zh:'ジェヤン ヘン ハオ', ko:'イデロ チョアヨ' }},
+
+  q_360:     { ja:'仕上がりを確認してください', en:'Please check your style', zh:'请确认您的发型', ko:'스타일을 확인해주세요', kana:{ en:'プリーズ チェック ユア スタイル', zh:'チン チュエレン ニンデ ファーシン', ko:'スタイルル ファギネジュセヨ' }},
+  chk_looks: { ja:'いかがですか？', en:'How does it look?', zh:'您觉得怎么样？', ko:'어떠세요?', kana:{ en:'ハウ ダズ イット ルック？', zh:'ニン ジュエドゥ ゼンマヤン？', ko:'オットセヨ？' }},
+  looks_ok:  { ja:'完璧です！', en:'Perfect!', zh:'很好！', ko:'완벽해요!', kana:{ en:'パーフェクト！', zh:'ヘン ハオ！', ko:'ワンビョッケヨ！' }},
+  looks_fix: { ja:'少し直してほしい', en:'Please adjust', zh:'请稍微调整一下', ko:'조금 수정해주세요', kana:{ en:'プリーズ アジャスト', zh:'チン シャオウェイ ティアオジョン イーシャ', ko:'チョグム スジョンヘジュセヨ' }},
+  fix_bangs: { ja:'前髪', en:'Bangs', zh:'刘海', ko:'앞머리', kana:{ en:'バングス', zh:'リウハイ', ko:'アンモリ' }},
+  fix_side:  { ja:'サイド', en:'Side', zh:'两侧', ko:'사이드', kana:{ en:'サイド', zh:'リャンツェ', ko:'サイドゥ' }},
+  fix_back:  { ja:'襟足', en:'Back/Nape', zh:'后颈', ko:'뒷목', kana:{ en:'バック ネイプ', zh:'ホウジン', ko:'ドゥンモク' }},
+  fix_top:   { ja:'トップ', en:'Top', zh:'头顶', ko:'탑', kana:{ en:'トップ', zh:'トウディン', ko:'タップ' }},
+  q_styling: { ja:'スタイリング剤はいかがですか？', en:'Would you like styling product?', zh:'需要使用造型产品吗？', ko:'스타일링 제품은 어떠세요?', kana:{ en:'ウッド ユー ライク スタイリング プロダクト？', zh:'シュヤオ シーヨン ザオシン チャンピン マ？', ko:'スタイリン ジェプムン オットセヨ？' }},
+  sty_wax:   { ja:'ワックス', en:'Wax', zh:'发蜡', ko:'왁스', kana:{ en:'ワックス', zh:'ファーラー', ko:'ワクスゥ' }},
+  sty_oil:   { ja:'オイル', en:'Oil', zh:'发油', ko:'오일', kana:{ en:'オイル', zh:'ファーヨウ', ko:'オイル' }},
+  sty_spray: { ja:'スプレー', en:'Spray', zh:'喷雾', ko:'스프레이', kana:{ en:'スプレー', zh:'ペンウー', ko:'スプレイ' }},
+  sty_none:  { ja:'何もつけない', en:'Nothing please', zh:'不用了', ko:'괜찮아요', kana:{ en:'ナッシング プリーズ', zh:'ブーヨンラ', ko:'クェンチャナヨ' }},
+  q_care:    { ja:'アフターケアのポイント', en:'After care tips', zh:'护发小贴士', ko:'애프터 케어 팁', kana:{ en:'アフター ケア ティップス', zh:'フーファー シャオティエシー', ko:'エプト ケオ ティプ' }},
+  notip:     { ja:'🎌 日本ではチップは不要です', en:'🎌 No tipping needed in Japan!', zh:'🎌 日本不需要给小费！', ko:'🎌 일본에서는 팁이 필요 없어요!', kana:{ en:'ノー ティッピング ニーデッド イン ジャパン！', zh:'リーベン ブー シュヤオ ゲイ シャオフェイ！', ko:'イルボネソヌン ティビ ピリョ オプソヨ！' }},
+  q_payment: { ja:'お会計', en:'Payment', zh:'付款', ko:'결제', kana:{ en:'ペイメント', zh:'フークワン', ko:'キョルジェ' }},
+  q_photo:   { ja:'一緒に記念写真を撮りませんか？', en:'Shall we take a photo together?', zh:'要不要一起拍张纪念照？', ko:'함께 기념사진 찍을까요?', kana:{ en:'シャル ウィ テイク ア フォト トゥゲザー？', zh:'ヤオブヤオ イーチー パイジャン ジーニエンジャオ？', ko:'ハムケ キニョムサジン ッチグルッカヨ？' }},
+  photo_yes: { ja:'撮りましょう！', en:'Yes!', zh:'好的！', ko:'네!', kana:{ en:'イエス！', zh:'ハオダ！', ko:'ネ！' }},
+  photo_no:  { ja:'いいです', en:'No thanks', zh:'不用了', ko:'괜찮아요', kana:{ en:'ノー サンクス', zh:'ブーヨンラ', ko:'クェンチャナヨ' }},
+  review_lbl:{ ja:'Googleクチコミで応援してね', en:'Leave us a Google review!', zh:'请给我们写Google评价！', ko:'구글 리뷰를 남겨주세요!', kana:{ en:'リーブ アス ア グーグル レビュー！', zh:'チン ゲイ ウォーメン シェ グーグル ピンジャ！', ko:'ググル リビュルル ナムギョジュセヨ！' }},
+  farewell:  { ja:'またのお越しをお待ちしています', en:'See you again!', zh:'欢迎再次光临！', ko:'또 오세요!', kana:{ en:'シー ユー アゲイン！', zh:'ファンイン ザイツー グァンリン！', ko:'ト オセヨ！' }}
+};
+
+var sosData = [
+  { id:'pain',   e:'😖', c:{ en:'It hurts',      zh:'疼',      ko:'아파요'      }, ck:{ en:'イット ハーツ',          zh:'テン',          ko:'アパヨ'          }, j:'痛いところがあります' },
+  { id:'itchy',  e:'🤲', c:{ en:'Itchy',          zh:'痒',      ko:'가려워요'    }, ck:{ en:'イッチー',               zh:'ヤン',          ko:'カリョウォヨ'    }, j:'かゆいところがあります' },
+  { id:'toilet', e:'🚻', c:{ en:'Restroom',       zh:'厕所',    ko:'화장실'      }, ck:{ en:'レストルーム',           zh:'ツースオ',      ko:'ファジャンシル'  }, j:'トイレに行きたいです' },
+  { id:'wait',   e:'⏸', c:{ en:'Wait please',    zh:'等等',    ko:'잠깐요'      }, ck:{ en:'ウェイト プリーズ',      zh:'ドンドン',      ko:'チャムッカンヨ'  }, j:'少し待ってほしいです' },
+  { id:'call',   e:'🙋', c:{ en:'Call staff',     zh:'叫人',    ko:'직원 불러요'  }, ck:{ en:'コール スタッフ',        zh:'ジャオレン',    ko:'ジゴン プルロヨ' }, j:'スタッフを呼んでください' },
+  { id:'temp',   e:'🌡', c:{ en:'Too cold / hot', zh:'太冷/热', ko:'온도 조절'   }, ck:{ en:'トゥー コールド ホット', zh:'タイ レン ルー', ko:'オンド チョジョル' }, j:'温度を調整してほしいです' }
+];
+
+var careData = {
+  color: [
+    { icon:'🚿', ja:'48時間は熱いお湯を避けてください', en:'Avoid hot water for 48 hours', zh:'48小时内避免使用热水', ko:'48시간 동안 뜨거운 물을 피해주세요' },
+    { icon:'☀️', ja:'紫外線に注意してください', en:'Protect from UV rays', zh:'注意防晒', ko:'자외선을 주의해주세요' },
+    { icon:'🧴', ja:'カラー専用シャンプーがおすすめです', en:'Use color-safe shampoo', zh:'建议使用护色洗发水', ko:'컬러 전용 샴푸를 추천합니다' }
+  ],
+  perm: [
+    { icon:'🚿', ja:'48時間はシャンプーを控えてください', en:'No shampoo for 48 hours', zh:'48小时内不要洗发', ko:'48시간 동안 샴푸하지 마세요' },
+    { icon:'🌀', ja:'パーマ用スタイリング剤をお使いください', en:'Use perm-friendly products', zh:'请使用烫发专用护发品', ko:'파마용 스타일링 제품을 사용해주세요' },
+    { icon:'✋', ja:'濡れたまま寝ないようにしてください', en:"Don't sleep with wet hair", zh:'不要湿发入睡', ko:'젖은 머리로 자지 마세요' }
+  ],
+  cut: [
+    { icon:'💆', ja:'頭皮マッサージで血行を促進しましょう', en:'Scalp massage promotes healthy hair', zh:'头皮按摩有助于促进血液循环', ko:'두피 마사지로 혈행을 촉진하세요' },
+    { icon:'🧴', ja:'ヘアオイルで潤いをキープしましょう', en:'Use hair oil to keep moisture', zh:'使用发油保持水分', ko:'헤어 오일로 수분을 유지하세요' },
+    { icon:'✂️', ja:'次回は1〜2ヶ月後がおすすめです', en:'Next visit recommended in 1-2 months', zh:'建议1-2个月后再来', ko:'다음 방문은 1~2개월 후를 권장합니다' }
+  ],
+  default: [
+    { icon:'💆', ja:'毎日のブラッシングでツヤを出しましょう', en:'Daily brushing adds shine', zh:'每日梳发增添光泽', ko:'매일 빗질로 윤기를 더하세요' },
+    { icon:'🧴', ja:'保湿ケアを忘れずに', en:'Keep hair moisturized', zh:'不要忘记保湿护理', ko:'보습 케어를 잊지 마세요' },
+    { icon:'😊', ja:'またのご来店をお待ちしています', en:'We look forward to seeing you again!', zh:'期待您再次光临！', ko:'다시 방문해 주시기를 기다리겠습니다!' }
+  ]
+};
+
+/* ============================================================
+   i18n helpers
+============================================================ */
+function tC(k) { return D[k] ? (D[k][S.lang] || D[k]['en']) : k; }
+function tJa(k) { return (!D[k] || S.lang === 'ja') ? '' : (D[k]['ja'] || ''); }
+function tK(k) { if (S.lang === 'ja' || !D[k] || !D[k].kana) return ''; return D[k].kana[S.lang] || ''; }
+function tri(k) {
+  var c = tC(k), kn = tK(k), j = tJa(k);
+  var h = '<span class="cl">' + c + '</span>';
+  if (kn) h += '<span class="ck">（' + kn + '）</span>';
+  if (j)  h += '<span class="cj">▶ ' + j + '</span>';
+  return h;
+}
+function qL(k) {
+  var c = tC(k), kn = tK(k), j = tJa(k);
+  var h = '<div class="q-main">' + c + '</div>';
+  if (kn) h += '<div class="q-kana">（' + kn + '）</div>';
+  if (j)  h += '<div class="q-ja">▶ ' + j + '</div>';
+  return h;
+}
+function isChemical() {
+  var chemical = ['color', 'both', 'perm'];
+  for (var i = 0; i < S.visit.menu.length; i++) { if (chemical.indexOf(S.visit.menu[i]) > -1) return true; }
+  return false;
+}
+
+/* ============================================================
+   SOS
+============================================================ */
+function buildSOS() {
+  var lg = S.lang, h = '';
+  for (var i = 0; i < sosData.length; i++) {
+    var d = sosData[i];
+    var cl = lg === 'ja' ? d.j : (d.c[lg] || d.c['en']);
+    var ck = lg !== 'ja' ? (d.ck[lg] || '') : '';
+    var jl = lg !== 'ja' ? '<div class="sos-j">▶ ' + d.j + '</div>' : '';
+    h += '<div class="sos-item" onclick="trigSOS(\'' + d.id + '\')"><span class="sos-e">' + d.e + '</span>'
+       + '<div class="sos-c">' + cl + '</div>'
+       + (ck ? '<div class="sos-k">（' + ck + '）</div>' : '')
+       + jl + '</div>';
+  }
+  document.getElementById('sos-grid').innerHTML = h;
+}
+function openSOS() { buildSOS(); document.getElementById('sos-ov').classList.add('open'); }
+function closeSOS() { document.getElementById('sos-ov').classList.remove('open'); }
+function trigSOS(id) {
+  closeSOS();
+  var d = null;
+  for (var i = 0; i < sosData.length; i++) { if (sosData[i].id === id) { d = sosData[i]; break; } }
+  if (!d) return;
+  document.getElementById('al-e').textContent = d.e;
+  document.getElementById('al-j').textContent = d.j;
+  document.getElementById('al-en').textContent = (d.c['en'] || '') + (d.ck['en'] ? '（' + d.ck['en'] + '）' : '');
+  document.getElementById('sos-alert').classList.add('open');
+  S.sos.push({ type: id, at: new Date().toISOString() }); save();
+}
+function closeAlert() { document.getElementById('sos-alert').classList.remove('open'); }
+
+/* ============================================================
+   STAGE 1
+============================================================ */
+function renderSt1() {
+  var b = document.getElementById('st1-body');
+  if (S.st1step === 0) st1_res(b);
+  else if (S.st1step === 1) st1_menu(b);
+  else st1_bag(b);
+}
+function st1_res(b) {
+  b.innerHTML = '<div class="q-card">' + qL('q_res')
+    + '<div class="choice-grid col2">'
+    + cBtn('📅', 'yes_res', S.visit.res === true,  'st1set("res",true)')
+    + cBtn('🚶', 'no_res',  S.visit.res === false, 'st1set("res",false)')
+    + '</div></div>' + nxtBtn('st1next()');
+}
+function st1_menu(b) {
+  var items = [
+    { k:'m_cut', e:'✂️', id:'cut' }, { k:'m_color', e:'🎨', id:'color' },
+    { k:'m_shampoo', e:'💆', id:'shampoo' }, { k:'m_both', e:'✂️🎨', id:'both' },
+    { k:'m_perm', e:'🌀', id:'perm' }
+  ];
+  var btns = '';
+  for (var i = 0; i < items.length; i++) {
+    var m = items[i];
+    var sel = S.visit.menu.indexOf(m.id) > -1;
+    btns += '<div class="cbtn' + (sel ? ' sel' : '') + '" onclick="toggleMenu(\'' + m.id + '\')">'
+          + '<span class="ce">' + m.e + '</span>' + tri(m.k) + '</div>';
+  }
+  b.innerHTML = '<div class="q-card">' + qL('q_menu')
+    + '<div style="font-size:11px;color:var(--orange);margin-bottom:8px;">' + tC('multi_ok') + '</div>'
+    + '<div class="choice-grid col2">' + btns + '</div></div>' + nxtBtn('st1next()');
+}
+function st1_bag(b) {
+  b.innerHTML = '<div class="q-card" style="text-align:center;">'
+    + '<div style="font-size:56px;margin-bottom:8px;">🎒</div>' + qL('q_bag')
+    + '<div class="choice-grid col2" style="margin-top:14px;">'
+    + cBtn('✅', 'bag_yes', S.visit.bag === true,  'st1set("bag",true)')
+    + cBtn('🎒', 'bag_no',  S.visit.bag === false, 'st1set("bag",false)')
+    + '</div></div>' + nxtBtn('nextStage()');
+}
+function st1set(f, v) {
+  if (f === 'res') S.visit.res = v;
+  if (f === 'bag') S.visit.bag = v;
+  save(); renderSt1();
+}
+function toggleMenu(id) {
+  var i = S.visit.menu.indexOf(id);
+  if (i > -1) S.visit.menu.splice(i, 1); else S.visit.menu.push(id);
+  save(); st1_menu(document.getElementById('st1-body'));
+}
+function st1next() {
+  if (S.st1step === 0) { S.st1step = 1; renderSt1(); }
+  else if (S.st1step === 1) {
+    if (!S.visit.menu.length) { alert('メニューを選んでください'); return; }
+    S.st1step = 2; renderSt1();
+  }
+}
+
+/* ============================================================
+   STAGE 2
+============================================================ */
+function renderSt2() {
+  buildSSBar();
+  var b = document.getElementById('st2-body');
+  if      (S.sub === 0) st2_hist(b);
+  else if (S.sub === 1) st2_allergy(b);
+  else if (S.sub === 2) st2_style(b);
+  else if (S.sub === 3) st2_ng(b);
+  else if (S.sub === 4) st2_price(b);
+  else                  st2_agree(b);
+}
+function buildSSBar() {
+  var h = '';
+  for (var i = 0; i < 5; i++) {
+    var cls = 'ss';
+    if (i === S.sub) cls += ' active';
+    else if (i < S.sub) cls += ' done';
+    h += '<div class="' + cls + '"></div>';
+  }
+  document.getElementById('ss-bar').innerHTML = h;
+}
+function st2_hist(b) {
+  var items = [
+    { k:'h_color', e:'🎨', id:'color' }, { k:'h_bleach', e:'⚡', id:'bleach' },
+    { k:'h_perm',  e:'🌀', id:'perm'  }, { k:'h_str',    e:'🔥', id:'str'    },
+    { k:'h_none',  e:'❌', id:'none'  }
+  ];
+  var btns = '';
+  for (var i = 0; i < items.length; i++) {
+    var m = items[i];
+    var sel = S.counsel.hist.indexOf(m.id) > -1;
+    btns += '<div class="cbtn' + (sel ? ' sel' : '') + '" onclick="togHist(\'' + m.id + '\')">'
+          + '<span class="ce">' + m.e + '</span>' + tri(m.k) + '</div>';
+  }
+  var note = !isChemical()
+    ? '<div style="background:#fff8e0;border-radius:10px;padding:8px 12px;font-size:12px;color:#a07000;margin-bottom:12px;">← 戻るで表示しています（カット・シャンプーのみ選択中）</div>'
+    : '';
+  b.innerHTML = note + '<div class="q-card">' + qL('q_hist')
+    + '<div class="choice-grid col2">' + btns + '</div></div>' + nxtBtn('ss2next()');
+}
+function st2_allergy(b) {
+  var items = [
+    { k:'a_none', e:'😊', id:'none' }, { k:'a_sens', e:'🌸', id:'sens' }, { k:'a_react', e:'⚠️', id:'react' }
+  ];
+  var btns = '';
+  for (var i = 0; i < items.length; i++) {
+    var m = items[i];
+    btns += '<div class="cbtn' + (S.counsel.allergy === m.id ? ' sel' : '') + '" onclick="setAllergy(\'' + m.id + '\')">'
+          + '<span class="ce">' + m.e + '</span>' + tri(m.k) + '</div>';
+  }
+  var note = !isChemical()
+    ? '<div style="background:#fff8e0;border-radius:10px;padding:8px 12px;font-size:12px;color:#a07000;margin-bottom:12px;">← 戻るで表示しています</div>'
+    : '';
+  b.innerHTML = note + '<div class="q-card">' + qL('q_allergy')
+    + '<div class="choice-grid col1">' + btns + '</div></div>' + nxtBtn('ss2next()');
+}
+function st2_style(b) {
+  var styles = [
+    { id:1, e:'💇', l:'Short' }, { id:2, e:'💆', l:'Bob'     }, { id:3, e:'🧑‍🦱', l:'Wavy'    },
+    { id:4, e:'👩‍🦰', l:'Long'  }, { id:5, e:'🧑‍🦲', l:'Trim'    }, { id:6, e:'👱',   l:'Layered' },
+    { id:7, e:'🌊', l:'Loose' }, { id:8, e:'✂️',   l:'Classic' }, { id:9, e:'🌟',   l:'Style'   }
+  ];
+  var g = '';
+  for (var i = 0; i < styles.length; i++) {
+    var s = styles[i];
+    g += '<div class="cat-item' + (S.counsel.styleId === s.id ? ' sel' : '') + '" onclick="setStyle(' + s.id + ')">'
+       + s.e + '<div style="font-size:10px;color:var(--gray);">' + s.l + '</div>'
+       + '<span class="cat-chk">✓</span></div>';
+  }
+  b.innerHTML = '<div class="q-card">' + qL('q_style')
+    + '<div class="cat-grid" style="margin-top:12px;">' + g + '</div>'
+    + '<div style="margin-top:12px;background:#f0f8ff;border-radius:10px;padding:10px;font-size:13px;color:#555;text-align:center;">' + tC('photo_hint') + '</div>'
+    + '</div>' + nxtBtn('ss2next()');
+}
+function st2_ng(b) {
+  var ngs = [
+    { k:'ng_short', id:'short' }, { k:'ng_bang', id:'bang' },
+    { k:'ng_bright', id:'bright' }, { k:'ng_ear', id:'ear' }
+  ];
+  var ngbtns = '';
+  for (var i = 0; i < ngs.length; i++) {
+    var m = ngs[i];
+    var sel = S.counsel.ng.indexOf(m.id) > -1;
+    ngbtns += '<div class="cbtn ng-s' + (sel ? ' sel' : '') + '" onclick="togNG(\'' + m.id + '\')">'
+            + '<span class="ce">✋</span>' + tri(m.k) + '</div>';
+  }
+  var lens = [
+    { k:'l_above', id:'above' }, { k:'l_sho', id:'sho' },
+    { k:'l_col',   id:'col'   }, { k:'l_chest', id:'chest' }
+  ];
+  var lbtns = '';
+  for (var j = 0; j < lens.length; j++) {
+    var lm = lens[j];
+    var kn = tK(lm.k), jt = tJa(lm.k);
+    lbtns += '<div class="len-btn' + (S.counsel.len === lm.id ? ' sel' : '') + '" onclick="setLen(\'' + lm.id + '\')">'
+           + tC(lm.k)
+           + (kn ? '<br><span style="font-size:10px;color:var(--od)">（' + kn + '）</span>' : '')
+           + (jt ? '<br><span style="font-size:10px;color:var(--gray)">▶ ' + jt + '</span>' : '')
+           + '</div>';
+  }
+  b.innerHTML = '<div class="q-card">' + qL('q_ng')
+    + '<div class="choice-grid col2">' + ngbtns + '</div>'
+    + '<div style="margin-top:16px;">' + qL('q_len')
+    + '<div class="len-row">' + lbtns + '</div></div></div>' + nxtBtn('ss2next()');
+}
+function st2_price(b) {
+  var p = S.counsel.price, m = S.counsel.min;
+  var keys = ['1','2','3','4','5','6','7','8','9','C','0','⌫'];
+  var npad = '';
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    npad += '<div class="nk' + (k==='⌫'?' del':k==='C'?' clr':'') + '" onclick="numTap(\'' + k + '\')">' + k + '</div>';
+  }
+  var tbtns = '';
+  var ts = [30, 45, 60, 90, 120];
+  for (var j = 0; j < ts.length; j++) {
+    tbtns += '<div class="len-btn' + (m === ts[j] ? ' sel' : '') + '" onclick="setMin(' + ts[j] + ')">'
+           + ts[j] + '<br><span style="font-size:10px;color:var(--gray)">' + tC('min_unit') + '</span></div>';
+  }
+  b.innerHTML = '<div class="q-card">' + qL('q_price')
+    + '<div style="font-size:13px;color:var(--od);text-align:center;margin:8px 0 2px;">💴 料金 / Price <span style="color:var(--gray);font-weight:normal;">('+tC('tax_excl')+')</span></div>'
+    + '<div class="price-disp">¥<span id="pval">' + (p || '—') + '</span></div>'
+    + '<div class="numpad">' + npad + '</div>'
+    + (p ? '<div style="text-align:center;font-size:14px;color:var(--gray);margin-top:8px;">'
+        + tC('tax_label') + ' (10%): <span style="font-weight:bold;color:var(--od);font-size:18px;">¥' + Math.round(p*1.1).toLocaleString() + '</span></div>' : '')
+    + '<div style="font-size:13px;color:var(--gray);text-align:center;margin:14px 0 4px;">⏱ 所要時間 / Time</div>'
+    + '<div class="time-disp"><span id="mval">' + (m || '—') + '</span> ' + tC('min_unit') + '</div>'
+    + '<div class="time-btns">' + tbtns + '</div>'
+    + '</div>' + nxtBtn('ss2next()');
+}
+function st2_agree(b) {
+  var menuMap = { cut:tC('m_cut'), color:tC('m_color'), shampoo:tC('m_shampoo'), both:tC('m_both'), perm:tC('m_perm') };
+  var histMap = { color:tC('h_color'), bleach:tC('h_bleach'), perm:tC('h_perm'), str:tC('h_str'), none:tC('h_none') };
+  var alMap   = { none:tC('a_none'), sens:tC('a_sens'), react:tC('a_react') };
+  var ngMap   = { short:tC('ng_short'), bang:tC('ng_bang'), bright:tC('ng_bright'), ear:tC('ng_ear') };
+  var lenMap  = { above:tC('l_above'), sho:tC('l_sho'), col:tC('l_col'), chest:tC('l_chest') };
+  var menuMapJa  = { cut:'カット', color:'カラー', shampoo:'シャンプーのみ', both:'カット＋カラー', perm:'パーマ' };
+  var histMapJa  = { color:'カラー', bleach:'ブリーチ', perm:'パーマ', str:'縮毛矯正', none:'なし' };
+  var alMapJa    = { none:'特になし', sens:'敏感肌', react:'かぶれた経験あり' };
+  var ngMapJa    = { short:'短くしすぎないで', bang:'前髪は切らないで', bright:'明るくしないで', ear:'耳を出さないで' };
+  var lenMapJa   = { above:'肩より上', sho:'肩', col:'鎖骨', chest:'胸より上' };
+  var menuV='', menuJa='', histV='', histJa='', ngV='', ngJa='';
+  for (var i = 0; i < S.visit.menu.length; i++)  { if (i) { menuV += '・'; menuJa += '・'; } menuV += menuMap[S.visit.menu[i]] || S.visit.menu[i]; menuJa += menuMapJa[S.visit.menu[i]] || ''; }
+  for (var j = 0; j < S.counsel.hist.length; j++) { if (j) { histV += '・'; histJa += '・'; } histV += histMap[S.counsel.hist[j]] || S.counsel.hist[j]; histJa += histMapJa[S.counsel.hist[j]] || ''; }
+  for (var k = 0; k < S.counsel.ng.length; k++)   { if (k) { ngV += ' '; ngJa += ' '; } ngV += ngMap[S.counsel.ng[k]] || S.counsel.ng[k]; ngJa += ngMapJa[S.counsel.ng[k]] || ''; }
+  var alJa = alMapJa[S.counsel.allergy] || '';
+  var lenJa = lenMapJa[S.counsel.len] || '';
+  var kn = tK('agree_ok'), jt = tJa('agree_ok');
+  b.innerHTML = '<div class="q-card">' + qL('q_agree') + '</div>'
+    + '<div class="sum-card">'
+    + sRow('✂️', 'q_menu',    menuV || '—', S.lang!=='ja'?menuJa:'')
+    + sRow('💇', 'q_hist',    histV || '—', S.lang!=='ja'?histJa:'')
+    + sRow('🌸', 'q_allergy', alMap[S.counsel.allergy] || '—', S.lang!=='ja'?alJa:'')
+    + sRow('✋', 'q_ng',      ngV   || '—', S.lang!=='ja'?ngJa:'')
+    + sRow('📏', 'q_len',     lenMap[S.counsel.len] || '—', S.lang!=='ja'?lenJa:'')
+    + '</div>'
+    + '<div class="sum-card">'
+    + '<div class="sum-price">¥' + (S.counsel.price ? Math.round(S.counsel.price*1.1).toLocaleString() : '—') + '</div>'
+    + (S.counsel.price ? '<div style="text-align:center;font-size:11px;color:var(--gray);">¥' + S.counsel.price.toLocaleString() + ' + ' + tC('tax_label') + '</div>' : '')
+    + '<div class="sum-time">'  + (S.counsel.min   || '—') + ' ' + tC('min_unit') + '</div>'
+    + '</div>'
+    + '<button class="agree-btn" onclick="doAgree()">' + tC('agree_ok')
+    + (kn ? '<span class="btn-sub">（' + kn + '）</span>' : '')
+    + (jt ? '<span class="btn-sub">▶ 同意してスタート</span>' : '')
+    + '</button><div style="height:20px;"></div>';
+}
+function sRow(ico, qk, val, jaVal) {
+  var key = tC(qk), ja = tJa(qk);
+  return '<div class="sum-row"><span class="sum-ico">' + ico + '</span>'
+       + '<span class="sum-key">' + key + (ja ? '<br><span style="font-size:10px;">' + ja + '</span>' : '') + '</span>'
+       + '<span class="sum-val">' + val
+       + (jaVal && S.lang !== 'ja' ? '<br><span style="font-size:11px;color:var(--gray);font-weight:normal;">▶ ' + jaVal + '</span>' : '')
+       + '</span></div>';
+}
+function doAgree() {
+  S.counsel.agreed = true; S.counsel.at = new Date().toISOString(); save();
+  clearAnim(2, function() { goTo(3); });
+}
+var priceStr = '';
+function numTap(k) {
+  if (k === 'C')       { priceStr = ''; S.counsel.price = null; }
+  else if (k === '⌫') { priceStr = priceStr.slice(0, -1); S.counsel.price = priceStr ? parseInt(priceStr) : null; }
+  else if (priceStr.length < 7) { priceStr += k; S.counsel.price = parseInt(priceStr); }
+  save();
+  st2_price(document.getElementById('st2-body'));
+}
+function setMin(t) { S.counsel.min = t; save(); st2_price(document.getElementById('st2-body')); }
+function togHist(id) {
+  if (id === 'none') { S.counsel.hist = ['none']; }
+  else {
+    var ni = S.counsel.hist.indexOf('none'); if (ni > -1) S.counsel.hist.splice(ni, 1);
+    var i = S.counsel.hist.indexOf(id); if (i > -1) S.counsel.hist.splice(i, 1); else S.counsel.hist.push(id);
+  }
+  save(); st2_hist(document.getElementById('st2-body'));
+}
+function setAllergy(id) { S.counsel.allergy = id; save(); st2_allergy(document.getElementById('st2-body')); }
+function setStyle(id)   { S.counsel.styleId = id; save(); st2_style(document.getElementById('st2-body')); }
+function togNG(id) { var i = S.counsel.ng.indexOf(id); if (i > -1) S.counsel.ng.splice(i, 1); else S.counsel.ng.push(id); save(); st2_ng(document.getElementById('st2-body')); }
+function setLen(id) { S.counsel.len = id; save(); st2_ng(document.getElementById('st2-body')); }
+function ss2next() {
+  if (S.sub === 0 && isChemical() && !S.counsel.hist.length) return;
+  if (S.sub === 1 && isChemical() && !S.counsel.allergy) return;
+  S.sub++;
+  save(); renderSt2(); window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   STAGE 3 シャンプー
+============================================================ */
+var st3step = 0;
+function renderSt3() {
+  var b = document.getElementById('st3-body');
+  if      (st3step === 0) st3_cover(b);
+  else if (st3step === 1) st3_temp(b);
+  else if (st3step === 2) st3_pressure(b);
+  else                    st3_itchy(b);
+}
+function st3_cover(b) {
+  b.innerHTML = '<div class="q-card">'
+    + '<div style="font-size:60px;text-align:center;margin-bottom:8px;">🧖</div>'
+    + qL('q_cover')
+    + '<div class="choice-grid col2" style="margin-top:14px;">'
+    + cBtn('😌', 'cover_yes', S.shampoo.cover === true,  'st3set("cover",true)')
+    + cBtn('🙂', 'cover_no',  S.shampoo.cover === false, 'st3set("cover",false)')
+    + '</div></div>' + nxtBtn('st3next()');
+}
+function st3_temp(b) {
+  var v = S.shampoo.temp;
+  var pct = ((v-1)/4*100).toFixed(0);
+  b.innerHTML = '<div class="q-card">'
+    + qL('q_temp')
+    + '<div style="text-align:center;font-size:13px;color:var(--gray);margin-bottom:8px;">🧊 ←→ 🔥</div>'
+    + '<div class="meter-row">'
+    + '<div class="meter-btn" onclick="st3meter(\'temp\',-1)">－</div>'
+    + '<div class="meter-track"><div class="meter-fill" id="temp-fill" style="width:'+pct+'%"></div></div>'
+    + '<div class="meter-btn" onclick="st3meter(\'temp\',1)">＋</div>'
+    + '<div class="meter-val" id="temp-val">'+v+'</div>'
+    + '</div>'
+    + '<div class="choice-grid col1" style="margin-top:8px;">'
+    + cBtn('🧊', 'temp_cold', false, 'st3setTemp(1)')
+    + cBtn('😊', 'temp_ok',   v===3,  'st3setTemp(3)')
+    + cBtn('🔥', 'temp_hot',  false, 'st3setTemp(5)')
+    + '</div></div>' + nxtBtn('st3next()');
+}
+function st3_pressure(b) {
+  var v = S.shampoo.pressure;
+  var pct = ((v-1)/4*100).toFixed(0);
+  b.innerHTML = '<div class="q-card">'
+    + qL('q_pressure')
+    + '<div style="text-align:center;font-size:13px;color:var(--gray);margin-bottom:8px;">🪶 ←→ 💪</div>'
+    + '<div class="meter-row">'
+    + '<div class="meter-btn" onclick="st3meter(\'pressure\',-1)">－</div>'
+    + '<div class="meter-track"><div class="meter-fill" id="pres-fill" style="width:'+pct+'%"></div></div>'
+    + '<div class="meter-btn" onclick="st3meter(\'pressure\',1)">＋</div>'
+    + '<div class="meter-val" id="pres-val">'+v+'</div>'
+    + '</div>'
+    + '<div class="choice-grid col1" style="margin-top:8px;">'
+    + cBtn('🪶', 'pres_weak', false, 'st3setPress(1)')
+    + cBtn('😊', 'pres_ok',   v===3,  'st3setPress(3)')
+    + cBtn('💪', 'pres_hard', false, 'st3setPress(5)')
+    + '</div></div>' + nxtBtn('st3next()');
+}
+function st3_itchy(b) {
+  b.innerHTML = '<div class="q-card">'
+    + qL('q_itchy')
+    + '<canvas id="head-canvas" width="220" height="220"></canvas>'
+    + '<div style="text-align:center;margin-top:8px;">'
+    + '<button class="timer-ctrl" onclick="clearItchy()">' + tC('itchy_clear') + ' / リセット</button>'
+    + '</div></div>'
+    + nxtBtn('nextStage()');
+  drawHead();
+}
+function drawHead() {
+  var c = document.getElementById('head-canvas'); if (!c) return;
+  c.onclick = headTap;
+  c.ontouchend = function(e){ e.preventDefault(); headTap(e); };
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 220, 220);
+  ctx.beginPath(); ctx.arc(110, 100, 88, 0, Math.PI*2);
+  ctx.fillStyle = '#FFF0E0'; ctx.fill();
+  ctx.strokeStyle = '#E05A10'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.font = '28px serif'; ctx.textAlign = 'center';
+  ctx.fillText('👁', 84, 100); ctx.fillText('👁', 136, 100);
+  ctx.fillText('👃', 110, 122); ctx.fillText('👄', 110, 150);
+  for (var i = 0; i < S.shampoo.itchy.length; i++) {
+    var pt = S.shampoo.itchy[i];
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, 14, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,100,100,0.5)'; ctx.fill();
+    ctx.font = '18px serif'; ctx.fillText('😖', pt.x, pt.y+7);
+  }
+}
+function headTap(e) {
+  var c = document.getElementById('head-canvas'); if (!c) return;
+  var r = c.getBoundingClientRect();
+  var x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  var y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  x = x * (220 / r.width); y = y * (220 / r.height);
+  S.shampoo.itchy.push({ x: Math.round(x), y: Math.round(y) });
+  save(); drawHead();
+}
+function clearItchy() { S.shampoo.itchy = []; save(); drawHead(); }
+function st3set(f, v) { if (f === 'cover') S.shampoo.cover = v; save(); renderSt3(); }
+function st3setTemp(v) { S.shampoo.temp = v; save(); st3_temp(document.getElementById('st3-body')); }
+function st3setPress(v) { S.shampoo.pressure = v; save(); st3_pressure(document.getElementById('st3-body')); }
+function st3meter(field, delta) {
+  if (field === 'temp')     { S.shampoo.temp     = Math.max(1, Math.min(5, S.shampoo.temp     + delta)); save(); st3_temp(document.getElementById('st3-body')); }
+  if (field === 'pressure') { S.shampoo.pressure = Math.max(1, Math.min(5, S.shampoo.pressure + delta)); save(); st3_pressure(document.getElementById('st3-body')); }
+}
+function st3next() { st3step++; renderSt3(); window.scrollTo(0,0); }
+
+/* ============================================================
+   STAGE 4 施術中
+============================================================ */
+var st4step = 0;
+var timerInterval = null;
+var timerEnd = null;
+function renderSt4() {
+  var b = document.getElementById('st4-body');
+  if      (st4step === 0) st4_talk(b);
+  else if (st4step === 1) st4_drink(b);
+  else                    st4_timer(b);
+}
+function st4_talk(b) {
+  b.innerHTML = '<div class="q-card">'
+    + qL('q_talk')
+    + '<div class="choice-grid col1" style="margin-top:4px;">'
+    + cBtn('💬', 'talk_chat',  S.treat.talk==='chat',  'st4set("talk","chat")')
+    + cBtn('🤫', 'talk_quiet', S.treat.talk==='quiet', 'st4set("talk","quiet")')
+    + cBtn('😴', 'talk_sleep', S.treat.talk==='sleep', 'st4set("talk","sleep")')
+    + '</div></div>' + nxtBtn('st4next()');
+}
+function st4_drink(b) {
+  b.innerHTML = '<div class="q-card">'
+    + '<div style="font-size:54px;text-align:center;margin-bottom:8px;">☕</div>'
+    + qL('q_drink')
+    + '<div class="choice-grid col2" style="margin-top:4px;">'
+    + cBtn('☕', 'dk_coffee', S.treat.drink==='coffee', 'st4set("drink","coffee")')
+    + cBtn('🍵', 'dk_tea',    S.treat.drink==='tea',    'st4set("drink","tea")')
+    + cBtn('💧', 'dk_water',  S.treat.drink==='water',  'st4set("drink","water")')
+    + cBtn('🚫', 'dk_none',   S.treat.drink==='none',   'st4set("drink","none")')
+    + '</div></div>' + nxtBtn('st4next()');
+}
+function st4_timer(b) {
+  var mins = timerEnd ? Math.max(0, Math.round((timerEnd - Date.now()) / 60000)) : 0;
+  var running = timerInterval !== null;
+  var pct = S.treat.timerTotal ? Math.max(0, mins / S.treat.timerTotal * 100) : 0;
+  var r = 68, circ = 2 * Math.PI * r;
+  var dash = (pct / 100 * circ).toFixed(1);
+  var spBtns = [ { key:'chk_bangs', id:'bangs' }, { key:'chk_side', id:'side' } ];
+  var spHtml = '';
+  for (var i=0;i<spBtns.length;i++) {
+    var sp = spBtns[i];
+    var ans = S.treat.checks[sp.id];
+    spHtml += '<div class="save-card">'
+      + '<div class="save-title">' + tC(sp.key) + (S.lang!=='ja'?'<br><span style="font-size:11px;color:var(--gray)">▶ '+ (sp.id==='bangs'?'前髪の長さ':'サイドの長さ') +'</span>':'') + '</div>'
+      + '<div class="save-row">'
+      + '<div class="cbtn' + (ans==='more'?' sel':'') + '" style="flex:1;min-height:56px;" onclick="saveCheck(\'' + sp.id + '\',\'more\')">'
+      + '<span class="ce">✂️</span>' + tri('chk_more') + '</div>'
+      + '<div class="cbtn' + (ans==='ok'?' sel':'') + '" style="flex:1;min-height:56px;" onclick="saveCheck(\'' + sp.id + '\',\'ok\')">'
+      + '<span class="ce">👌</span>' + tri('chk_ok') + '</div>'
+      + '</div></div>';
+  }
+  var tbtns = '';
+  var ts = [15,30,45,60,90];
+  for (var j=0;j<ts.length;j++) {
+    tbtns += '<div class="timer-ctrl" onclick="setTimer(' + ts[j] + ')">' + ts[j] + '<span style="font-size:10px"> ' + tC('min_unit') + '</span></div>';
+  }
+  b.innerHTML = '<div class="q-card">'
+    + '<div class="timer-ring-wrap">'
+    + '<svg width="160" height="160" viewBox="0 0 160 160">'
+    + '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="#eee" stroke-width="10"/>'
+    + '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + (running?'#FF7A2F':'#FFB088') + '" stroke-width="10"'
+    + ' stroke-dasharray="' + dash + ' ' + circ.toFixed(1) + '" stroke-linecap="round"/>'
+    + '</svg>'
+    + '<div class="timer-text"><div class="timer-min" id="timer-disp">' + (timerEnd ? (mins + "'") : '—') + '</div>'
+    + '<div class="timer-lbl">' + tC('timer_label') + (S.lang!=='ja'?'<br><span style="font-size:9px;color:var(--od)">（'+tK('timer_label')+'）</span><br><span style="font-size:9px;">▶ 施術タイマー</span>':'') + '</div></div>'
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--od);text-align:center;margin:6px 0 2px;">⚙️ ' + tC('timer_set') + (S.lang!=='ja'?'<br><span style="font-size:10px;color:var(--gray)">（'+tK('timer_set')+'）▶ タイマーをセット（美容師が操作）</span>':'') + '</div>'
+    + '<div class="timer-btns">' + tbtns + '</div>'
+    + '<div class="timer-btns">'
+    + '<div class="timer-ctrl' + (running?' running':'') + '" onclick="toggleTimer()">' + (running ? '⏸ Stop' : '▶ Start') + '</div>'
+    + '<div class="timer-ctrl" onclick="resetTimer()">↺ Reset</div>'
+    + '</div></div>'
+    + spHtml
+    + '<button class="next-btn" style="margin-bottom:20px;" onclick="nextStage()">Next →<span class="btn-sub">次へ進む / 仕上げへ</span></button>';
+}
+function st4set(f, v) { if (f === 'talk') S.treat.talk = v; if (f === 'drink') S.treat.drink = v; save(); renderSt4(); }
+function st4next() { st4step++; renderSt4(); window.scrollTo(0,0); }
+function saveCheck(id, val) {
+  if (!S.treat.checks) S.treat.checks = {};
+  S.treat.checks[id] = val; save();
+  st4_timer(document.getElementById('st4-body'));
+}
+function setTimer(mins) {
+  S.treat.timerTotal = mins;
+  timerEnd = Date.now() + mins * 60000;
+  S.treat.timerEnd = timerEnd; save();
+  if (!timerInterval) toggleTimer();
+  else st4_timer(document.getElementById('st4-body'));
+}
+function toggleTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  else {
+    if (!timerEnd) return;
+    timerInterval = setInterval(function() {
+      var left = Math.max(0, Math.round((timerEnd - Date.now()) / 60000));
+      var el = document.getElementById('timer-disp');
+      if (el) el.textContent = left + "'";
+      if (left <= 0) { clearInterval(timerInterval); timerInterval = null; }
+      if (S.stage === 4) st4_timer(document.getElementById('st4-body'));
+    }, 10000);
+  }
+  if (S.stage === 4) st4_timer(document.getElementById('st4-body'));
+}
+function resetTimer() {
+  clearInterval(timerInterval); timerInterval = null;
+  timerEnd = null; S.treat.timerEnd = null; S.treat.timerTotal = null;
+  save(); st4_timer(document.getElementById('st4-body'));
+}
+
+/* ============================================================
+   STAGE 5 仕上げ確認
+============================================================ */
+var st5step = 0;
+function renderSt5() {
+  var b = document.getElementById('st5-body');
+  if      (st5step === 0) st5_check(b);
+  else if (st5step === 1) st5_styling(b);
+  else                    st5_care(b);
+}
+function st5_check(b) {
+  b.innerHTML = '<div class="q-card">'
+    + '<div style="font-size:56px;text-align:center;margin-bottom:8px;">🪞</div>'
+    + qL('q_360')
+    + '<div style="font-size:13px;color:var(--gray);text-align:center;margin:6px 0 14px;">'
+    + '📱 ' + (S.lang==='ja' ? '後ろ姿は美容師がスマホで見せます' : 'Stylist will show back view on phone / 美容師がスマホで後ろ姿を確認') + '</div>'
+    + qL('chk_looks')
+    + '<div class="choice-grid col2" style="margin-top:12px;">'
+    + cBtn('😍', 'looks_ok',  S.finish.looks==='ok',  'st5set("looks","ok")')
+    + cBtn('🔧', 'looks_fix', S.finish.looks==='fix', 'st5set("looks","fix")')
+    + '</div>'
+    + (S.finish.looks==='fix' ? fixPartHtml() : '')
+    + '</div>' + nxtBtn('st5next()');
+}
+function fixPartHtml() {
+  var parts = [
+    { k:'fix_bangs', id:'bangs' }, { k:'fix_side', id:'side' },
+    { k:'fix_back',  id:'back'  }, { k:'fix_top',  id:'top'  }
+  ];
+  var btns = '';
+  for (var i=0;i<parts.length;i++) {
+    var p = parts[i];
+    var sel = S.finish.retouch && S.finish.retouch.indexOf(p.id) > -1;
+    btns += '<div class="cbtn ng-s' + (sel?' sel':'') + '" onclick="togRetouch(\'' + p.id + '\')">'
+      + '<span class="ce">✂️</span>' + tri(p.k) + '</div>';
+  }
+  return '<div style="margin-top:12px;"><div style="font-size:13px;color:var(--red);margin-bottom:8px;">▶ 直す場所は？（複数可）</div>'
+    + '<div class="choice-grid col2">' + btns + '</div></div>';
+}
+function st5_styling(b) {
+  b.innerHTML = '<div class="q-card">'
+    + qL('q_styling')
+    + '<div class="choice-grid col2" style="margin-top:4px;">'
+    + cBtn('💆', 'sty_wax',   S.finish.styling==='wax',   'st5set("styling","wax")')
+    + cBtn('💧', 'sty_oil',   S.finish.styling==='oil',   'st5set("styling","oil")')
+    + cBtn('💨', 'sty_spray', S.finish.styling==='spray', 'st5set("styling","spray")')
+    + cBtn('🚫', 'sty_none',  S.finish.styling==='none',  'st5set("styling","none")')
+    + '</div></div>' + nxtBtn('st5next()');
+}
+function st5_care(b) {
+  var menu = S.visit.menu;
+  var tips = careData.default;
+  if (menu.indexOf('color') > -1 || menu.indexOf('both') > -1) tips = careData.color;
+  else if (menu.indexOf('perm') > -1) tips = careData.perm;
+  else if (menu.indexOf('cut') > -1) tips = careData.cut;
+  var cards = '';
+  for (var i=0;i<tips.length;i++) {
+    var t = tips[i];
+    var custTxt = t[S.lang] || t['en'];
+    var jaTxt = S.lang !== 'ja' ? t['ja'] : '';
+    cards += '<div class="care-card"><span class="care-ico">' + t.icon + '</span>'
+      + '<div><div class="care-txt">' + custTxt + '</div>'
+      + (jaTxt ? '<div class="care-ja">▶ ' + jaTxt + '</div>' : '')
+      + '</div></div>';
+  }
+  b.innerHTML = '<div class="q-card">' + qL('q_care') + '</div>'
+    + cards
+    + '<button class="next-btn" style="margin-bottom:20px;" onclick="nextStage()">Next →<span class="btn-sub">次へ進む / お会計へ</span></button>';
+}
+function st5set(f, v) { if (f === 'looks') S.finish.looks = v; if (f === 'styling') S.finish.styling = v; save(); renderSt5(); }
+function togRetouch(id) {
+  if (!S.finish.retouch) S.finish.retouch = [];
+  var i = S.finish.retouch.indexOf(id);
+  if (i > -1) S.finish.retouch.splice(i, 1); else S.finish.retouch.push(id);
+  save(); st5_check(document.getElementById('st5-body'));
+}
+function st5next() { st5step++; renderSt5(); window.scrollTo(0, 0); }
+
+/* ============================================================
+   STAGE 6 お会計・お見送り
+============================================================ */
+var st6step = 0;
+function renderSt6() {
+  var b = document.getElementById('st6-body');
+  if      (st6step === 0) st6_payment(b);
+  else if (st6step === 1) st6_photo(b);
+  else                    st6_review(b);
+}
+function st6_payment(b) {
+  var p = S.counsel.price;
+  var taxIncl = p ? Math.round(p*1.1) : null;
+  b.innerHTML = '<div class="notip-box">'
+    + '<div class="notip-main">' + tC('notip') + '</div>'
+    + (S.lang !== 'ja' ? '<div class="notip-ja">▶ 日本ではチップは不要です</div>' : '')
+    + '</div>'
+    + '<div class="q-card">'
+    + '<div style="font-size:13px;color:var(--od);text-align:center;font-weight:bold;">💴 ' + tC('q_payment') + (S.lang!=='ja'?' / お会計':'') + '</div>'
+    + '<div class="payment-big">¥' + (taxIncl ? taxIncl.toLocaleString() : '—') + '</div>'
+    + (p ? '<div style="text-align:center;font-size:12px;color:var(--gray);margin-bottom:8px;">¥' + p.toLocaleString() + ' + ' + tC('tax_label') + ' (10%)</div>' : '')
+    + '<div class="pay-icons">'
+    + ['💳 VISA','💳 Master','💳 JCB','📱 PayPay','📱 Alipay','📱 WeChat Pay'].map(function(x){ return '<div class="pay-icon">' + x + '</div>'; }).join('')
+    + '</div></div>'
+    + nxtBtn('st6next()');
+}
+function st6_photo(b) {
+  b.innerHTML = '<div class="q-card" style="text-align:center;">'
+    + '<div style="font-size:64px;margin-bottom:8px;">📸</div>'
+    + qL('q_photo')
+    + '<div class="choice-grid col2" style="margin-top:16px;">'
+    + cBtn('😄', 'photo_yes', S.finish.photo===true,  'st6setPhoto(true)')
+    + cBtn('🙏', 'photo_no',  S.finish.photo===false, 'st6setPhoto(false)')
+    + '</div></div>' + nxtBtn('st6next()');
+}
+function st6_review(b) {
+  b.innerHTML = '<div class="qr-box">'
+    + '<div style="font-size:22px;margin-bottom:6px;">⭐⭐⭐⭐⭐</div>'
+    + '<div class="qr-label">' + tC('review_lbl') + (S.lang!=='ja'?'<br><span style="font-size:11px;color:var(--gray)">▶ Googleクチコミで応援してね</span>':'') + '</div>'
+    + '<div class="qr-code">📲 QR<br><span style="font-size:9px;">（店舗URLを設定）</span></div>'
+    + '</div>'
+    + '<button class="next-btn" style="background:var(--green);margin-bottom:20px;" onclick="showComplete()">'
+    + '🎉 Quest Complete!<span class="btn-sub">クエスト完了！</span></button>';
+}
+function st6setPhoto(v) { S.finish.photo = v; save(); st6_photo(document.getElementById('st6-body')); }
+function st6next() { st6step++; renderSt6(); window.scrollTo(0, 0); }
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function cBtn(e, k, sel, act) {
+  return '<div class="cbtn' + (sel ? ' sel' : '') + '" onclick="' + act + '">'
+       + '<span class="ce">' + e + '</span>' + tri(k) + '</div>';
+}
+function nxtBtn(act) {
+  var kn = tK('next'), j = S.lang !== 'ja' ? tJa('next') : '';
+  return '<button class="next-btn" style="margin-bottom:20px;" onclick="' + act + '">'
+       + tC('next')
+       + (kn ? '<span class="btn-sub">（' + kn + '）</span>' : '')
+       + (j  ? '<span class="btn-sub">▶ 次へ進む</span>' : '')
+       + '</button>';
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function dotTap(n) {
+  if (n === S.stage) return;
+  if (n === 0) {
+    // Stage 0（言語選択）へ
+    show(S.stage, false); show(0, true);
+    S.stage = 0; save();
+    document.getElementById('sos-fab').style.display = 'none';
+    updateHeader(); return;
+  }
+  // SOSボタンを表示（Stage0以外）
+  document.getElementById('sos-fab').style.display = 'flex';
+  goTo(n);
+}
+
+function selectLang(lg) {
+  S.lang = lg; save();
+  show(0, false); show(1, true);
+  S.stage = 1; S.st1step = 0; save();
+  document.getElementById('sos-fab').style.display = 'flex';
+  updateHeader(); renderSt1();
+}
+
+function goBack() {
+  if (S.stage === 6 && st6step > 0) { st6step--; renderSt6(); window.scrollTo(0,0); return; }
+  if (S.stage === 5 && st5step > 0) { st5step--; renderSt5(); window.scrollTo(0,0); return; }
+  if (S.stage === 4 && st4step > 0) { st4step--; renderSt4(); window.scrollTo(0,0); return; }
+  if (S.stage === 3 && st3step > 0) { st3step--; renderSt3(); window.scrollTo(0,0); return; }
+  if (S.stage === 2 && S.sub === 0) { goTo(1); return; }
+  if (S.stage === 2 && S.sub > 0) { S.sub--; save(); renderSt2(); window.scrollTo(0,0); return; }
+  if (S.stage === 1 && S.st1step > 0) { S.st1step--; renderSt1(); return; }
+  if (S.stage === 1) {
+    show(1, false); show(0, true); S.stage = 0; save();
+    document.getElementById('sos-fab').style.display = 'none';
+    updateHeader(); return;
+  }
+  if (S.stage <= 0) return;
+  goTo(S.stage - 1);
+}
+
+function nextStage() {
+  var c = S.stage; if (c >= 6) { showComplete(); return; }
+  clearAnim(c, function() { goTo(c + 1); });
+}
+
+function goTo(n) {
+  show(S.stage, false); S.stage = n; save(); show(n, true);
+  if (n === 1) { S.st1step = 0; renderSt1(); }
+  if (n === 2) { S.sub = isChemical() ? 0 : 2; save(); renderSt2(); }
+  if (n === 3) { st3step = 0; renderSt3(); }
+  if (n === 4) { st4step = 0; renderSt4(); }
+  if (n === 5) { st5step = 0; renderSt5(); }
+  if (n === 6) { st6step = 0; renderSt6(); }
+  updateHeader(); window.scrollTo(0, 0);
+}
+
+function show(n, on) {
+  var el = document.getElementById('st' + n);
+  if (el) el.classList[on ? 'add' : 'remove']('active');
+}
+
+function updateHeader() {
+  var s = S.stage;
+  for (var i = 0; i <= 6; i++) {
+    var d = document.getElementById('d' + i);
+    d.classList.remove('active', 'done');
+    if (i === s) d.classList.add('active');
+    else if (i < s) d.classList.add('done');
+  }
+  var lb = document.getElementById('stage-label');
+  var bb = document.getElementById('back-btn');
+  if (s === 0) { lb.textContent = 'Salon Quest'; bb.style.visibility = 'hidden'; }
+  else {
+    var k = 's' + s + '_title';
+    lb.textContent = 'Stage ' + s + '/6  ' + tC(k) + (S.lang !== 'ja' ? ' (' + tJa(k) + ')' : '');
+    bb.style.visibility = 'visible';
+  }
+  for (var st = 1; st <= 6; st++) {
+    var el = document.getElementById('st' + st + '-title'); if (!el) continue;
+    var tk = 's' + st + '_title';
+    var kn = tK(tk), jt = tJa(tk);
+    el.innerHTML = tC(tk)
+      + (kn ? '<span class="ja-sub" style="color:var(--od);">（' + kn + '）</span>' : '')
+      + (jt ? '<span class="ja-sub">▶ ' + jt + '</span>' : '');
+  }
+}
+
+function clearAnim(n, cb) {
+  var el = document.getElementById('sc');
+  document.getElementById('sc-sub').textContent = n < 6
+    ? 'Next: Stage ' + (n + 1) + ' ▶ ' + tC('s' + (n + 1) + '_title')
+    : '🎉 Quest Complete!';
+  el.classList.add('open');
+  setTimeout(function() { el.classList.remove('open'); cb(); }, 900);
+}
+function showComplete() {
+  var b = document.getElementById('st6-body');
+  b.innerHTML = '<div class="complete-wrap">'
+    + '<div class="complete-emoji">🎉</div>'
+    + '<div class="complete-title">Quest Complete!</div>'
+    + '<div class="complete-sub">'
+    + tC('farewell') + '<br>'
+    + (S.lang!=='ja' ? '<span style="font-size:13px;color:var(--gray)">▶ またのお越しをお待ちしています</span><br>' : '')
+    + '</div>'
+    + '<div style="font-size:36px;margin:20px 0;">✂️ 🎨 💆 🌟</div>'
+    + '<button class="next-btn" style="background:var(--green);max-width:320px;margin:0 auto;" onclick="resetApp()">'
+    + '🔄 New Customer<span class="btn-sub">新しいお客様</span></button>'
+    + '</div>';
+}
+function resetApp() { localStorage.removeItem('SQ'); location.reload(); }
+
+function openLang() {
+  document.getElementById('lang-ov').classList.add('open');
+  var langs = ['ja','en','zh','ko'];
+  for (var i = 0; i < langs.length; i++) {
+    document.getElementById('lb-' + langs[i]).classList.toggle('sel', langs[i] === S.lang);
+  }
+}
+function closeLang() { document.getElementById('lang-ov').classList.remove('open'); }
+function changeLang(lg) {
+  S.lang = lg; save(); updateHeader();
+  if (S.stage === 1) renderSt1();
+  if (S.stage === 2) renderSt2();
+  if (S.stage === 3) renderSt3();
+  if (S.stage === 4) renderSt4();
+  if (S.stage === 5) renderSt5();
+  if (S.stage === 6) renderSt6();
+  closeLang();
+}
+
+function save() { try { localStorage.setItem('SQ', JSON.stringify(S)); } catch(e) {} }
+function load() {
+  try {
+    var d = localStorage.getItem('SQ');
+    if (!d) return;
+    S = JSON.parse(d);
+    if (!S.treat.checks) S.treat.checks = {};
+    for (var i = 0; i <= 6; i++) show(i, false);
+    show(S.stage, true);
+    if (S.stage > 0) document.getElementById('sos-fab').style.display = 'flex';
+    if (S.stage === 1) renderSt1();
+    if (S.stage === 2) renderSt2();
+    if (S.stage === 3) renderSt3();
+    if (S.stage === 4) renderSt4();
+    if (S.stage === 5) renderSt5();
+    if (S.stage === 6) renderSt6();
+  } catch(e) {}
+}
+
+document.getElementById('sos-fab').style.display = 'none';
+load();
+updateHeader();
+</script>
+</body>
+</html>
